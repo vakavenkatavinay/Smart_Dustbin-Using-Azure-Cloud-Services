@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Smart Bin Cloud Monitoring System</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7f9;
+      margin: 0;
+      padding: 30px;
+      color: #243447;
+    }
+
+    .dashboard {
+      max-width: 650px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px #00000012;
+    }
+
+    h1 {
+      color: #16794b;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .item {
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .label {
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    #connectionStatus {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard">
+    <h1> Smart Bin Cloud Monitoring System </h1>
+    <p>Live Azure IoT Monitoring Dashboard</p>
+
+    <div class="item">
+      <div class="label">Fill Percentage</div>
+      <div class="value" id="fillPercentage">--</div>
+    </div>
+
+    <div class="item">
+      <div class="label">Bin Status</div>
+      <div class="value" id="binStatus">--</div>
+    </div>
+
+    <div class="item">
+      <div class="label">Lid Status</div>
+      <div class="value" id="lidStatus">--</div>
+    </div>
+
+    <div class="item">
+      <div class="label">Hand Detected</div>
+      <div class="value" id="handDetected">--</div>
+    </div>
+
+    <div class="item">
+      <div class="label">Timestamp</div>
+      <div class="value" id="lastUpdated">--</div>
+    </div>
+
+    <div id="connectionStatus">
+      Connecting to Azure...
+    </div>
+  </div>
+
+  <script>
+    const REFRESH_INTERVAL = 1000;
+
+    async function refreshSmartBin() {
+      try {
+        const response = await fetch("/api/status", {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        const fill = data.fillPercentage;
+
+        document.getElementById(
+          "fillPercentage"
+        ).textContent =
+          fill === null || fill === undefined
+            ? "Unknown"
+            : Number(fill).toFixed(1) + "%";
+
+        document.getElementById(
+          "binStatus"
+        ).textContent = data.binStatus || "UNKNOWN";
+
+        document.getElementById(
+          "lidStatus"
+        ).textContent = data.lidStatus || "UNKNOWN";
+
+        document.getElementById(
+          "handDetected"
+        ).textContent =
+          data.handDetected ? "YES" : "NO";
+
+        if (data.lastUpdated) {
+          const date = new Date(data.lastUpdated);
+
+          document.getElementById(
+            "lastUpdated"
+          ).textContent = date.toLocaleString(
+            "en-GB",
+            {
+              dateStyle: "medium",
+              timeStyle: "medium"
+            }
+          );
+
+          const ageSeconds =
+            (Date.now() - date.getTime()) / 1000;
+
+          document.getElementById(
+            "connectionStatus"
+          ).textContent =
+            ageSeconds > 45
+              ? "Sensor data is outdated"
+              : "Receiving recent sensor data";
+
+        } else {
+          document.getElementById(
+            "lastUpdated"
+          ).textContent = "Unavailable";
+
+          document.getElementById(
+            "connectionStatus"
+          ).textContent = "No update timestamp";
+        }
+
+      } catch (error) {
+        document.getElementById(
+          "connectionStatus"
+        ).textContent =
+          "Unable to retrieve Azure sensor data";
+
+        console.error(error);
+      }
+    }
+
+    refreshSmartBin();
+
+    setInterval(
+      refreshSmartBin,
+      REFRESH_INTERVAL
+    );
+  </script>
+</body>
+</html>
