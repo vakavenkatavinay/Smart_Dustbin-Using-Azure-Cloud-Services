@@ -1,0 +1,14 @@
+{
+  "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "name": "eventHubMessages",
+      "direction": "in",
+      "eventHubName": "iothub-ehub-adinoinput-59826860-71577563e1",
+      "connection": "Adinoinputecosort_events_IOTHUB",
+      "cardinality": "many",
+      "consumerGroup": "ecosort-functions",
+      "dataType": "string"
+    }
+  ]
+}
